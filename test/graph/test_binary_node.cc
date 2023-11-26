@@ -8,6 +8,12 @@ TEST(BinaryNode, getValue) {
   EXPECT_EQ(3, node.getValue());
 }
 
+TEST(BinaryNode, setValue) {
+  BinaryNode<int> node(3);
+  node.setValue(4);
+  EXPECT_EQ(4, node.getValue());
+}
+
 TEST(BinaryNode, getLeftNullByDefault) {
   BinaryNode<int> node(3);
   EXPECT_EQ(node.getLeft(), nullptr);

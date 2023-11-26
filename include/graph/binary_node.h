@@ -9,6 +9,7 @@ class BinaryNode {
 public:
   BinaryNode(T value);
   T getValue();
+  void setValue(T value);
 
   void setLeft(BinaryNode<T>* leftNode);
   void setRight(BinaryNode<T>* rightNode);
@@ -26,6 +27,11 @@ BinaryNode<T>::BinaryNode(T value) : value(value) {
 template<typename T>
 T BinaryNode<T>::getValue() {
   return this->value;
+}
+
+template<typename T>
+void BinaryNode<T>::setValue(T value) {
+  this->value = value;
 }
 
 template<typename T>
