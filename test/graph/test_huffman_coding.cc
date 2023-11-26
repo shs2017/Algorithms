@@ -17,7 +17,6 @@ TEST(HuffmanTest, Constructor) {
 //   EXPECT_EQ(encoding, 0);
 // }
 
-
 // TEST(HuffmanTest, SeconLargestEncoding) {
 //   std::vector<char> v{'H','e','l','l','o', 'w','o','r','l','d'};
 //   HuffmanCoding<char> h(v);

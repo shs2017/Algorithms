@@ -22,30 +22,59 @@ template<typename T>
 class HuffmanCoding {
   CountMap<T> computeCounts(std::vector<T> message);
   PriorityQueue<T> createQueueFromCounts(CountMap<T> counts);
+
+  OptionalBinaryNode<T>* createGraph(PriorityQueue<T> q);
   void deleteGraph(OptionalBinaryNode<T>* node);
 
-
-  OptionalBinaryNode<T>* root;
+  void computeEncoding(OptionalBinaryNode<T>* node, std::unordered_map<T, int>& m, int value);
 
 public:
   HuffmanCoding(std::vector<T> v);
-  ~HuffmanCoding();
 };
-
 
 template<typename T>
 HuffmanCoding<T>::HuffmanCoding(std::vector<T> message) {
   auto counts = this->computeCounts(message);
   auto q = this->createQueueFromCounts(counts);
 
+  auto root = this->createGraph(q);
+
+  std::unordered_map<T, int> m;
+  computeEncoding(root->getLeft(), m, 1);
+  computeEncoding(root->getRight(), m, 2);
+
+  // for (auto& i : m) {
+  //   std::cout << i.first << ", " << i.second << std::endl;
+  // }
+
+  this->deleteGraph(root);
+}
+
+
+template<typename T>
+void HuffmanCoding<T>::computeEncoding(OptionalBinaryNode<T>* node, std::unordered_map<T, int>& m, int value) {
+  if (node == nullptr) {
+    return;
+  }
+
+  if (node->getValue().has_value()) {
+    auto symbol = node->getValue().value();
+    m.insert({symbol, value});
+  }
+
+  computeEncoding(node->getLeft(), m, (value << 1));
+  computeEncoding(node->getRight(), m, (value << 1) + 1);
+}
+
+template<typename T>
+OptionalBinaryNode<T>* HuffmanCoding<T>::createGraph(PriorityQueue<T> q) {
   while (!q.empty()) {
     auto leftNode = q.top();
     auto leftPriority = leftNode->getPriority();
     q.pop();
 
     if (q.empty()) {
-      this->root = leftNode;
-      break;
+      return leftNode;
     }
 
     auto rightNode = q.top();
@@ -59,11 +88,8 @@ HuffmanCoding<T>::HuffmanCoding(std::vector<T> message) {
 
     q.push(newNode);
   }
-}
 
-template<typename T>
-HuffmanCoding<T>::~HuffmanCoding() {
-  this->deleteGraph(this->root);
+  return nullptr;
 }
 
 template<typename T>
