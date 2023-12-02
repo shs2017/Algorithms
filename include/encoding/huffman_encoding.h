@@ -7,6 +7,8 @@
 
 #include <cassert>
 
+#include <iostream>
+
 #include "graph/graph.h"
 #include "graph/node_id.h"
 
@@ -19,12 +21,17 @@ class HuffmanEncoding {
   std::unordered_map<T, int> buildSymbolCountsMap(std::vector<T> symbolStream);
 
   NodeId buildEncodingTree(Graph<std::optional<T>>& graph, std::unordered_map<T, int> unorderedCounts);
-  std::priority_queue<std::pair<int, NodeId>> buildInitialQueue(Graph<std::optional<T>>& graph, std::unordered_map<T, int> unorderedCounts);
+  std::priority_queue<std::pair<int, NodeId>> buildInitialQueue(Graph<std::optional<T>>& graph,
+								std::unordered_map<T, int> unorderedCounts);
 
   void buildEncodingTable(Graph<std::optional<T>> graph, NodeId root);
   void buildEncodingTableHelper(Graph<std::optional<T>> graph, NodeId nodeId, int encoding);
+
 public:
   HuffmanEncoding(std::vector<T> symbolStream);
+
+  int encode(T symbol);
+  T decode(int decode);
 };
 
 
@@ -50,7 +57,8 @@ std::unordered_map<T, int> HuffmanEncoding<T>::buildSymbolCountsMap(std::vector<
 }
 
 template<typename T>
-NodeId HuffmanEncoding<T>::buildEncodingTree(Graph<std::optional<T>>& graph, std::unordered_map<T, int> unorderedCounts) {
+NodeId HuffmanEncoding<T>::buildEncodingTree(Graph<std::optional<T>>& graph,
+					     std::unordered_map<T, int> unorderedCounts) {
   auto q = buildInitialQueue(graph, unorderedCounts);
 
   while (!q.empty()) {
@@ -71,8 +79,8 @@ NodeId HuffmanEncoding<T>::buildEncodingTree(Graph<std::optional<T>>& graph, std
     q.pop();
 
     auto nodeId = graph.createNode(Node<std::optional<T>>(std::optional<T>{}));
-    graph.createEdge(nodeId, largerNode);
     graph.createEdge(nodeId, smallerNode);
+    graph.createEdge(nodeId, largerNode);
 
     q.push({smallerCount + largerCount, nodeId});
   }
@@ -81,7 +89,10 @@ NodeId HuffmanEncoding<T>::buildEncodingTree(Graph<std::optional<T>>& graph, std
 }
 
 template<typename T>
-std::priority_queue<std::pair<int, NodeId>> HuffmanEncoding<T>::buildInitialQueue(Graph<std::optional<T>>& graph, std::unordered_map<T, int> unorderedCounts) {
+std::priority_queue<
+  std::pair<int,NodeId>
+  > HuffmanEncoding<T>::buildInitialQueue(Graph<std::optional<T>>& graph,
+					  std::unordered_map<T, int> unorderedCounts) {
   std::priority_queue<std::pair<int, NodeId>> q;
 
   for (auto symbolCountPair : unorderedCounts) {
@@ -101,7 +112,9 @@ void HuffmanEncoding<T>::buildEncodingTable(Graph<std::optional<T>> graph, NodeI
 }
 
 template<typename T>
-void HuffmanEncoding<T>::buildEncodingTableHelper(Graph<std::optional<T>> graph, NodeId nodeId, int encoding) {
+void HuffmanEncoding<T>::buildEncodingTableHelper(Graph<std::optional<T>> graph,
+						  NodeId nodeId,
+						  int encoding) {
   auto node = graph.getNodeFromId(nodeId);
 
   if (node.getValue().has_value()) {
@@ -115,12 +128,23 @@ void HuffmanEncoding<T>::buildEncodingTableHelper(Graph<std::optional<T>> graph,
   }
 
 
-  int count = 0;
+  int count = 1;
   for (auto childId : children) {
     this->buildEncodingTableHelper(graph, childId, (encoding << 1) + count);
 
-    assert(count < 2); // should be a binary tree
+    assert(count >= 0); // should be a binary tree
 
-    count++;
+    count--;
   }
 }
+
+template<typename T>
+int HuffmanEncoding<T>::encode(T symbol) {
+  return this->encodingTable.encode(symbol);
+}
+
+template<typename T>
+T HuffmanEncoding<T>::decode(int encoding) {
+  return this->encodingTable.decode(encoding);
+}
+
