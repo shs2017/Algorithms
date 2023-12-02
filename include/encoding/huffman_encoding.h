@@ -1,16 +1,23 @@
+#pragma once
+
 #include <optional>
 #include <queue>
-#include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "graph.h"
-#include "node_id.h"
+#include <cassert>
+
+#include "graph/graph.h"
+#include "graph/node_id.h"
+
+#include "encoding/encoding_table.h"
 
 template<typename T>
 class HuffmanEncoding {
+  EncodingTable<T> encodingTable;
+
   void buildEncodings(Graph<std::optional<T>> graph, NodeId root);
-  void buildEncodingsHelper(Graph<std::optional<T>> graph, NodeId nodeId, std::string encoding);
+  void buildEncodingsHelper(Graph<std::optional<T>> graph, NodeId nodeId, int encoding);
 public:
   HuffmanEncoding(std::vector<T> symbolStream);
 };
@@ -62,15 +69,16 @@ HuffmanEncoding<T>::HuffmanEncoding(std::vector<T> symbolStream) {
 
 template<typename T>
 void HuffmanEncoding<T>::buildEncodings(Graph<std::optional<T>> graph, NodeId rootId) {
-  this->buildEncodingsHelper(graph, rootId, "");
+  this->buildEncodingsHelper(graph, rootId, 0);
 }
 
 template<typename T>
-void HuffmanEncoding<T>::buildEncodingsHelper(Graph<std::optional<T>> graph, NodeId nodeId, std::string encoding) {
+void HuffmanEncoding<T>::buildEncodingsHelper(Graph<std::optional<T>> graph, NodeId nodeId, int encoding) {
   auto node = graph.getNodeFromId(nodeId);
 
   if (node.getValue().has_value()) {
-    std::cout << "Node " << node.getValue().value() << "'s encoding is " << encoding << std::endl;
+    auto symbol = node.getValue().value();
+    this->encodingTable.setSymbolEncodingEntry(symbol, encoding);
   }
 
   auto children = graph.getChildren(nodeId);
@@ -81,7 +89,10 @@ void HuffmanEncoding<T>::buildEncodingsHelper(Graph<std::optional<T>> graph, Nod
 
   int count = 0;
   for (auto childId : children) {
-    this->buildEncodingsHelper(graph, childId, encoding + std::to_string(count));
+    this->buildEncodingsHelper(graph, childId, (encoding << 1) + count);
+
+    assert(count < 2); // should be a binary search tree
+
     count++;
   }
 }

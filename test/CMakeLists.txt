@@ -9,7 +9,7 @@ add_executable(
   graph/test_graph.cc
   graph/test_bfs.cc
   graph/test_dfs.cc
-  graph/test_huffman_encoding.cc
+  encoding/test_huffman_encoding.cc
 )
 
 target_link_libraries(

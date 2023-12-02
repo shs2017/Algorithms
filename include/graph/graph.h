@@ -4,8 +4,8 @@
 #include <set>
 #include <unordered_map>
 
-#include "node.h"
-#include "node_id.h"
+#include "graph/node.h"
+#include "graph/node_id.h"
 
 /**
  * Implementation of a graph data structure
