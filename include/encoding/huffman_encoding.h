@@ -7,8 +7,6 @@
 
 #include <cassert>
 
-#include <iostream>
-
 #include "graph/graph.h"
 #include "graph/node_id.h"
 
