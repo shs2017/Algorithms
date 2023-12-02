@@ -32,7 +32,7 @@ int EncodingTable<T>::encode(T symbol) {
 template<typename T>
 T EncodingTable<T>::decode(int encoding) {
   if (!this->decoder.count(encoding)) {
-    throw std::runtime_error("Symbol does not exist in the encoding table");
+    throw std::runtime_error("Encoding does not exist in the encoding table");
   }
 
   return this->decoder[encoding];
