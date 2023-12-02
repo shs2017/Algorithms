@@ -16,8 +16,13 @@ template<typename T>
 class HuffmanEncoding {
   EncodingTable<T> encodingTable;
 
-  void buildEncodings(Graph<std::optional<T>> graph, NodeId root);
-  void buildEncodingsHelper(Graph<std::optional<T>> graph, NodeId nodeId, int encoding);
+  std::unordered_map<T, int> buildSymbolCountsMap(std::vector<T> symbolStream);
+
+  NodeId buildEncodingTree(Graph<std::optional<T>>& graph, std::unordered_map<T, int> unorderedCounts);
+  std::priority_queue<std::pair<int, NodeId>> buildInitialQueue(Graph<std::optional<T>>& graph, std::unordered_map<T, int> unorderedCounts);
+
+  void buildEncodingTable(Graph<std::optional<T>> graph, NodeId root);
+  void buildEncodingTableHelper(Graph<std::optional<T>> graph, NodeId nodeId, int encoding);
 public:
   HuffmanEncoding(std::vector<T> symbolStream);
 };
@@ -25,21 +30,28 @@ public:
 
 template<typename T>
 HuffmanEncoding<T>::HuffmanEncoding(std::vector<T> symbolStream) {
+  Graph<std::optional<T>> graph;
+
+  auto unorderedCounts = this->buildSymbolCountsMap(symbolStream);
+
+  auto rootNode = this->buildEncodingTree(graph, unorderedCounts);
+  this->buildEncodingTable(graph, rootNode);
+}
+
+template<typename T>
+std::unordered_map<T, int> HuffmanEncoding<T>::buildSymbolCountsMap(std::vector<T> symbolStream) {
   std::unordered_map<T, int> unorderedCounts;
+
   for (auto symbol : symbolStream) {
     unorderedCounts[symbol]++;
   }
 
-  Graph<std::optional<T>> graph;
+  return unorderedCounts;
+}
 
-  std::priority_queue<std::pair<int, NodeId>> q;
-  for (auto symbolCountPair : unorderedCounts) {
-    auto symbol = symbolCountPair.first;
-    auto counts = -1 * symbolCountPair.second; // -1 is to make it a min-heap
-
-    auto nodeId = graph.createNode(Node<std::optional<T>>(std::optional<T>{symbol}));
-    q.push({counts, nodeId});
-  }
+template<typename T>
+NodeId HuffmanEncoding<T>::buildEncodingTree(Graph<std::optional<T>>& graph, std::unordered_map<T, int> unorderedCounts) {
+  auto q = buildInitialQueue(graph, unorderedCounts);
 
   while (!q.empty()) {
     auto smallerCountNodePair = q.top();
@@ -50,8 +62,7 @@ HuffmanEncoding<T>::HuffmanEncoding(std::vector<T> symbolStream) {
 
     if (q.empty()) {
       NodeId rootNode = smallerNode;
-      this->buildEncodings(graph, rootNode);
-      return;
+      return rootNode;
     }
 
     auto largerCountNodePair = q.top();
@@ -65,15 +76,32 @@ HuffmanEncoding<T>::HuffmanEncoding(std::vector<T> symbolStream) {
 
     q.push({smallerCount + largerCount, nodeId});
   }
+
+  return NodeId{0};
 }
 
 template<typename T>
-void HuffmanEncoding<T>::buildEncodings(Graph<std::optional<T>> graph, NodeId rootId) {
-  this->buildEncodingsHelper(graph, rootId, 0);
+std::priority_queue<std::pair<int, NodeId>> HuffmanEncoding<T>::buildInitialQueue(Graph<std::optional<T>>& graph, std::unordered_map<T, int> unorderedCounts) {
+  std::priority_queue<std::pair<int, NodeId>> q;
+
+  for (auto symbolCountPair : unorderedCounts) {
+    auto symbol = symbolCountPair.first;
+    auto counts = -1 * symbolCountPair.second; // -1 is to make it a min-heap
+
+    auto nodeId = graph.createNode(Node<std::optional<T>>(std::optional<T>{symbol}));
+    q.push({counts, nodeId});
+  }
+
+  return q;
 }
 
 template<typename T>
-void HuffmanEncoding<T>::buildEncodingsHelper(Graph<std::optional<T>> graph, NodeId nodeId, int encoding) {
+void HuffmanEncoding<T>::buildEncodingTable(Graph<std::optional<T>> graph, NodeId rootId) {
+  this->buildEncodingTableHelper(graph, rootId, 0);
+}
+
+template<typename T>
+void HuffmanEncoding<T>::buildEncodingTableHelper(Graph<std::optional<T>> graph, NodeId nodeId, int encoding) {
   auto node = graph.getNodeFromId(nodeId);
 
   if (node.getValue().has_value()) {
@@ -89,11 +117,10 @@ void HuffmanEncoding<T>::buildEncodingsHelper(Graph<std::optional<T>> graph, Nod
 
   int count = 0;
   for (auto childId : children) {
-    this->buildEncodingsHelper(graph, childId, (encoding << 1) + count);
+    this->buildEncodingTableHelper(graph, childId, (encoding << 1) + count);
 
-    assert(count < 2); // should be a binary search tree
+    assert(count < 2); // should be a binary tree
 
     count++;
   }
 }
-
