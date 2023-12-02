@@ -5,7 +5,8 @@ enable_testing()
 
 add_executable(
   test_algos
-  graph/test_binary_node.cc
+  graph/test_node.cc
+  graph/test_graph.cc
   graph/test_bfs.cc
   graph/test_dfs.cc
 )

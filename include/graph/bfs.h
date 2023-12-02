@@ -1,43 +1,54 @@
-#include <vector>
 #include <deque>
+#include <unordered_set>
+#include <vector>
 
-#include "binary_node.h"
+#include "graph.h"
+#include "node_id.h"
 
 template<typename T>
 class BFS {
-  BinaryNode<T> root;
-
-  void appendNonEmptyNode(std::deque<BinaryNode<T>>& d, BinaryNode<T>* node);
+  NodeId rootId;
+  Graph<T> graph;
 
 public:
-  BFS(BinaryNode<T>& root);
+  BFS(NodeId rootId, Graph<T>& graph);
 
   void traverseAsVector(std::vector<T>& v);
 };
 
-
 template<typename T>
-BFS<T>::BFS(BinaryNode<T>& root): root(root) {
+BFS<T>::BFS(NodeId rootId, Graph<T>& graph) : rootId(rootId), graph(graph) {
 }
 
 template<typename T>
 void BFS<T>::traverseAsVector(std::vector<T>& v) {
-  std::deque<BinaryNode<T>> d;
-  d.push_back(this->root);
+  std::deque<NodeId> d;
+  std::unordered_set<NodeId> visited;
+
+  d.push_back(this->rootId);
 
   while (!d.empty()) {
-    BinaryNode<T> node = d.front();
+    auto nodeId = d.front();
+
+    if (visited.count(nodeId)) {
+      d.pop_front();
+      continue;
+    }
+
+    visited.insert(nodeId);
+
+    auto node = this->graph.getNodeFromId(nodeId);
     v.push_back(node.getValue());
+
     d.pop_front();
 
-    this->appendNonEmptyNode(d, node.getLeft());
-    this->appendNonEmptyNode(d, node.getRight());
-  }
-}
+    auto children = this->graph.getChildren(nodeId);
+    if (!children.size()) {
+      continue;
+    }
 
-template<typename T>
-void BFS<T>::appendNonEmptyNode(std::deque<BinaryNode<T>>& d, BinaryNode<T>* node) {
-  if (node != nullptr) {
-    d.push_back(*node);
+    for (auto childId : children) {
+      d.push_back(childId);
+    }
   }
 }

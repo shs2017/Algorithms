@@ -1,35 +1,48 @@
+#include <unordered_set>
 #include <vector>
 
-#include "binary_node.h"
+#include "graph.h"
+#include "node_id.h"
 
 template<typename T>
 class DFS {
-  BinaryNode<T> root;
+  NodeId rootId;
+  Graph<T> graph;
 
 public:
-  DFS(BinaryNode<T>& root);
+  DFS(NodeId rootId, Graph<T>& graph);
   void traverseAsVector(std::vector<T>& v);
-  void traverseAsVectorTailRecursion(std::vector<T>& v, BinaryNode<T>* node);
+  void traverseAsVectorTailRecursion(NodeId nodeId, std::unordered_set<NodeId>& visited, std::vector<T>& v);
 };
 
 
 template<typename T>
-DFS<T>::DFS(BinaryNode<T>& root): root(root) {
+DFS<T>::DFS(NodeId rootId, Graph<T>& graph) : rootId(rootId), graph(graph) {
 }
 
 template<typename T>
 void DFS<T>::traverseAsVector(std::vector<T>& v) {
-  traverseAsVectorTailRecursion(v, &this->root);
+  std::unordered_set<NodeId> visited;
+  traverseAsVectorTailRecursion(this->rootId, visited, v);
 }
 
 template<typename T>
-void DFS<T>::traverseAsVectorTailRecursion(std::vector<T>& v, BinaryNode<T>* node) {
-  if (node == nullptr) {
+void DFS<T>::traverseAsVectorTailRecursion(NodeId nodeId, std::unordered_set<NodeId>& visited, std::vector<T>& v) {
+  if (visited.count(nodeId)) {
     return;
   }
 
-  v.push_back(node->getValue());
+  visited.insert(nodeId);
 
-  traverseAsVectorTailRecursion(v, node->getLeft());
-  traverseAsVectorTailRecursion(v, node->getRight());
+  auto node = this->graph.getNodeFromId(nodeId);
+  v.push_back(node.getValue());
+
+  auto children = this->graph.getChildren(nodeId);
+  if (!children.size()) {
+    return;
+  }
+
+  for (auto childId : children) {
+    traverseAsVectorTailRecursion(childId, visited, v);
+  }
 }

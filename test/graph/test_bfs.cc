@@ -3,22 +3,24 @@
 #include <vector>
 
 #include "graph/bfs.h"
+#include "graph/graph.h"
 
+TEST(BFS, traverseAsVector_Success_TwoEdges) {
+  Graph<char> graph;
 
-TEST(BFSTest, simple) {
-  BinaryNode<int> rootNode(3);
-  BinaryNode<int> leftNode(2);
-  BinaryNode<int> rightNode(5);
+  auto n1 = graph.createNode('a');
+  auto n2 = graph.createNode('b');
+  auto n3 = graph.createNode('c');
 
-  rootNode.setLeft(&leftNode);
-  rootNode.setRight(&rightNode);
+  graph.createEdge(n1, n2);
+  graph.createEdge(n1, n3);
 
-  std::vector<int> actualVector;
+  std::vector<char> actualVector;
 
-  BFS<int> bfs = BFS<int>(rootNode);
+  BFS<char> bfs = BFS<char>(n1, graph);
   bfs.traverseAsVector(actualVector);
 
-  std::vector<int> expectedVector{3, 2, 5};
+  std::vector<char> expectedVector{'a', 'b', 'c'};
 
   EXPECT_EQ(actualVector.size(), expectedVector.size());
 
@@ -27,33 +29,72 @@ TEST(BFSTest, simple) {
   }
 }
 
-TEST(BFSTest, complex) {
+TEST(BFS, traverseAsVector_Success_MultipleLayers) {
   //          n1
   //         / \
   //        /   \
   //       n2    n5
   //      / \    /
   //    n3  n4  n6
-  BinaryNode<int> node1(1);
-  BinaryNode<int> node2(2);
-  BinaryNode<int> node3(3);
-  BinaryNode<int> node4(4);
-  BinaryNode<int> node5(5);
-  BinaryNode<int> node6(6);
 
-  node1.setLeft(&node2);
-  node1.setRight(&node5);
-  node2.setLeft(&node3);
-  node2.setRight(&node4);
-  node5.setLeft(&node6);
+  Graph<std::string> graph;
+  auto n1 = graph.createNode(std::string("n1"));
+  auto n2 = graph.createNode(std::string("n2"));
+  auto n3 = graph.createNode(std::string("n3"));
+  auto n4 = graph.createNode(std::string("n4"));
+  auto n5 = graph.createNode(std::string("n5"));
+  auto n6 = graph.createNode(std::string("n6"));
 
-  std::vector<int> actualVector;
+  graph.createEdge(n1, n2);
+  graph.createEdge(n1, n5);
 
-  BFS<int> bfs = BFS<int>(node1);
+  graph.createEdge(n2, n3);
+  graph.createEdge(n2, n4);
+
+  graph.createEdge(n5, n6);
+
+  std::vector<std::string> actualVector;
+
+  auto bfs = BFS<std::string>(n1, graph);
   bfs.traverseAsVector(actualVector);
 
-  std::vector<int> expectedVector{1, 2, 5, 3, 4, 6};
+  std::vector<std::string> expectedVector{"n1", "n2", "n5", "n3", "n4", "n6"};
+  EXPECT_EQ(actualVector.size(), expectedVector.size());
 
+  for (int i = 0; i < actualVector.size(); i++) {
+    EXPECT_EQ(actualVector[i], expectedVector[i]);
+  }
+}
+
+
+TEST(BFS, traverseAsVector_Success_Cycles) {
+  //          n1
+  //         /
+  //        /
+  //       n2-\
+  //      / \  |
+  //      /  \ /
+  //    n3   n4
+
+  Graph<std::string> graph;
+  auto n1 = graph.createNode(std::string("n1"));
+  auto n2 = graph.createNode(std::string("n2"));
+  auto n3 = graph.createNode(std::string("n3"));
+  auto n4 = graph.createNode(std::string("n4"));
+
+  graph.createEdge(n1, n2);
+
+  graph.createEdge(n2, n3);
+  graph.createEdge(n2, n4);
+
+  graph.createEdge(n4, n2);
+
+  std::vector<std::string> actualVector;
+
+  auto bfs = BFS<std::string>(n1, graph);
+  bfs.traverseAsVector(actualVector);
+
+  std::vector<std::string> expectedVector{"n1", "n2", "n3", "n4"};
   EXPECT_EQ(actualVector.size(), expectedVector.size());
 
   for (int i = 0; i < actualVector.size(); i++) {
