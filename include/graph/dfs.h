@@ -1,8 +1,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "graph.h"
-#include "node_id.h"
+#include "graph/graph.h"
+#include "graph/node_id.h"
 
 template<typename T>
 class DFS {

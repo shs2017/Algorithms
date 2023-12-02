@@ -1,11 +1,12 @@
 #pragma once
 
 #include <limits>
+#include <list>
 #include <set>
 #include <unordered_map>
 
-#include "node.h"
-#include "node_id.h"
+#include "graph/node.h"
+#include "graph/node_id.h"
 
 /**
  * Implementation of a graph data structure
@@ -15,10 +16,10 @@
 template<typename T>
 class Graph {
   std::unordered_map<NodeId, Node<T>> nodes;
-  std::unordered_map<NodeId, std::set<NodeId>> adjacencyList;
+
+  std::unordered_map<NodeId, std::list<NodeId>> adjacencyList;
 
   NodeId currentNodeId;
-
   NodeId createNewNodeId();
 
 public:
@@ -32,7 +33,7 @@ public:
   void createEdge(NodeId fromId, NodeId toId);
   void removeEdge(NodeId fromId, NodeId toId);
 
-  std::set<NodeId> getChildren(NodeId nodeId);
+  std::list<NodeId> getChildren(NodeId nodeId);
 };
 
 template<typename T>
@@ -71,7 +72,7 @@ bool Graph<T>::hasEdge(NodeId fromId, NodeId toId) {
   }
 
   auto adjacentNodes = this->adjacencyList[fromId];
-  return adjacentNodes.find(toId) != adjacentNodes.end();
+  return std::find(adjacentNodes.begin(), adjacentNodes.end(), toId) != adjacentNodes.end();
 }
 
 template<typename T>
@@ -80,7 +81,13 @@ void Graph<T>::createEdge(NodeId fromId, NodeId toId) {
     throw std::runtime_error("One of the nodes provided does not exists");
   }
 
-  this->adjacencyList[fromId].insert(toId);
+  auto adjacentNodes = this->adjacencyList[fromId];
+  auto it = std::find(adjacentNodes.begin(), adjacentNodes.end(), toId);
+  if (it != adjacentNodes.end()) {
+    return;
+  }
+
+  this->adjacencyList[fromId].push_back(toId);
 }
 
 template<typename T>
@@ -89,18 +96,13 @@ void Graph<T>::removeEdge(NodeId fromId, NodeId toId) {
     throw std::runtime_error("One of the nodes provided does not exists");
   }
 
-  auto it = this->adjacencyList[fromId].find(toId);
-  if (it == adjacencyList[fromId].end()) {
-    throw std::runtime_error("The specified edge does not exist");
-  }
-
-  adjacencyList[fromId].erase(it);
+  this->adjacencyList[fromId].remove(toId);
 }
 
 template<typename T>
-std::set<NodeId> Graph<T>::getChildren(NodeId nodeId) {
+std::list<NodeId> Graph<T>::getChildren(NodeId nodeId) {
   if (!this->nodes.count(nodeId)) {
-    return std::set<NodeId>{};
+    return std::list<NodeId>{};
   }
     
   return this->adjacencyList[nodeId];
